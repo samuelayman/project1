@@ -1,0 +1,836 @@
+/* =========================================================
+   نظام حضور الطلاب — هوية بصرية عصرية
+   لوحة ألوان مستوحاة من السبورة الخضراء وورق الكراسة
+   ========================================================= */
+
+:root {
+  --ink: #16221D;
+  --ink-soft: #55645C;
+  --paper: #EFF3EF;
+  --surface: #FFFFFF;
+  --surface-2: #E6ECE7;
+  --surface-3: #D3DED6;
+
+  --primary: #1F5C4E;
+  --primary-dark: #143F35;
+  --primary-tint: #E1EEE9;
+
+  --accent: #C97A2B;
+  --accent-tint: #F7E8D6;
+
+  --danger: #B3492F;
+  --danger-tint: #F5DED7;
+
+  --warning: #C97A2B;
+  --warning-tint: #F7E8D6;
+
+  --info: #2B6E85;
+  --info-tint: #DCEBEF;
+
+  --success: #1F5C4E;
+  --success-tint: #E1EEE9;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+
+  --shadow-sm: 0 1px 3px rgba(22, 34, 29, 0.07);
+  --shadow-md: 0 10px 28px rgba(22, 34, 29, 0.10);
+
+  --font: "Cairo", "Tahoma", sans-serif;
+}
+
+/* الوضع الليلي (Dark Mode) */
+body.dark-mode {
+  --ink: #E8EDEB;
+  --ink-soft: #A8B5AF;
+  --paper: #0D1419;
+  --surface: #1A2127;
+  --surface-2: #252D35;
+  --surface-3: #3A4450;
+
+  --primary: #2D8B7A;
+  --primary-dark: #1F5C4E;
+  --primary-tint: #1A3A31;
+
+  --accent: #E8934D;
+  --accent-tint: #3D2815;
+
+  --danger: #E8725F;
+  --danger-tint: #4A2418;
+
+  --warning: #E8934D;
+  --warning-tint: #3D2815;
+
+  --info: #4BA5C9;
+  --info-tint: #1E3A48;
+
+  --success: #2D8B7A;
+  --success-tint: #1A3A31;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--paper);
+  color: var(--ink);
+  direction: rtl;
+  text-align: right;
+  min-height: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.container {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 26px 18px 56px;
+}
+
+/* زر تبديل الوضع الليلي */
+.theme-toggle {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.theme-toggle-btn {
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--surface-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-toggle-btn:hover {
+  background: var(--surface-2);
+  transform: scale(1.1);
+  box-shadow: var(--shadow-md);
+}
+
+.theme-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.theme-icon {
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.theme-toggle-btn:hover .theme-icon {
+  transform: rotate(20deg);
+}
+
+.screen {
+  display: none;
+  background: var(--surface);
+  padding: 28px 22px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--surface-3);
+  box-shadow: var(--shadow-md);
+  margin: 18px 0;
+}
+
+.screen.active {
+  display: block;
+  animation: screen-in 0.22s ease;
+}
+
+@keyframes screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+h1, h2, h3, h4, h5 {
+  color: var(--ink);
+  text-align: center;
+  margin-bottom: 18px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+h1 {
+  font-size: 1.9em;
+  color: var(--primary);
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.app-tagline {
+  text-align: center;
+  color: var(--ink-soft);
+  margin-bottom: 26px;
+  font-size: 0.95em;
+}
+
+h3 {
+  margin-top: 20px;
+  color: var(--primary);
+  font-size: 1.05em;
+}
+
+.menu-buttons, .dashboard-buttons, .scanner-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.class-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.search-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.search-container input, .search-container select {
+  flex: 1;
+}
+
+button {
+  padding: 14px 18px;
+  font-size: 15px;
+  font-family: inherit;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  background: var(--primary);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+button:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+button:focus-visible {
+  outline: 3px solid var(--primary-tint);
+  outline-offset: 2px;
+}
+
+.secondary-btn {
+  background: transparent;
+  color: var(--ink-soft);
+  border: 1.5px solid var(--surface-3);
+}
+
+.secondary-btn:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.delete-btn {
+  background: var(--danger) !important;
+}
+
+.delete-btn:hover {
+  background: #8f3922 !important;
+}
+
+.paid-btn {
+  background: var(--success) !important;
+}
+
+.paid-btn:hover {
+  background: var(--primary-dark) !important;
+}
+
+.unpaid-btn {
+  background: var(--warning) !important;
+  color: #2A1A0A !important;
+}
+
+.unpaid-btn:hover {
+  background: #a8631f !important;
+}
+
+.toggle-payment-btn {
+  background: var(--info) !important;
+}
+
+.toggle-payment-btn:hover {
+  background: #1f5261 !important;
+}
+
+.generate-btn {
+  padding: 11px 14px;
+  font-size: 13px;
+  white-space: nowrap;
+  background: var(--accent);
+}
+
+.generate-btn:hover {
+  background: #a8631f;
+}
+
+.current-month-label {
+  text-align: center;
+  color: var(--ink-soft);
+  background: var(--paper);
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+.month-btn {
+  background: var(--accent);
+}
+
+.month-btn:hover {
+  background: #a8631f;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.schedule-form {
+  background: var(--paper);
+  padding: 18px;
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+  border: 1px solid var(--surface-3);
+}
+
+.schedule-form h3 {
+  margin-top: 0;
+  color: var(--primary);
+}
+
+.input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.input-group input {
+  flex: 1;
+}
+
+input, select, textarea {
+  padding: 13px 15px;
+  border: 1.5px solid var(--surface-3);
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-family: inherit;
+  background: var(--surface);
+  color: var(--ink);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-tint);
+}
+
+input[readonly] {
+  background-color: var(--surface-2);
+  color: var(--ink-soft);
+  cursor: not-allowed;
+}
+
+select {
+  background-color: var(--surface);
+  cursor: pointer;
+}
+
+textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.message {
+  padding: 13px 15px;
+  border-radius: var(--radius-md);
+  margin-top: 14px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.95em;
+}
+
+.message.success {
+  background-color: var(--success-tint);
+  color: var(--primary-dark);
+  border: 1px solid var(--primary);
+}
+
+.message.error {
+  background-color: var(--danger-tint);
+  color: #7A2F1C;
+  border: 1px solid var(--danger);
+}
+
+#studentInfo {
+  background: var(--paper);
+  padding: 18px;
+  border-radius: var(--radius-md);
+  margin: 18px 0;
+  border: 1px solid var(--surface-3);
+}
+
+.scanner-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.scanner-container {
+  text-align: center;
+}
+
+#qrCodeContainer {
+  margin-top: 18px;
+  text-align: center;
+}
+
+#qrCodeContainer #qrcode {
+  display: inline-block;
+  padding: 14px;
+  border: 1.5px solid var(--surface-3);
+  border-radius: var(--radius-md);
+  background: #ffffff;
+}
+
+#teacherContent, #studentsList, #schedulesList, #availableSchedules, #classSchedulesInfo, #classAttendanceContent, #paymentStatusContent, #studentsPaymentStatus, #studentsUpdatePaymentStatus {
+  margin-top: 18px;
+  background: var(--paper);
+  padding: 16px;
+  border-radius: var(--radius-md);
+  max-height: 420px;
+  overflow-y: auto;
+  border: 1px solid var(--surface-3);
+}
+
+.attendance-record, .student-card, .schedule-card, .class-attendance-section, .payment-status-card {
+  background: var(--surface);
+  padding: 16px;
+  margin: 10px 0;
+  border-radius: var(--radius-md);
+  border-right: 4px solid var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.schedule-card {
+  border-right-color: var(--info);
+}
+
+.payment-status-card {
+  border-right-color: var(--accent);
+}
+
+.student-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.student-info {
+  flex: 1;
+}
+
+.student-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.student-actions button {
+  padding: 9px 13px;
+  font-size: 13px;
+}
+
+.schedule-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  gap: 6px;
+}
+
+.schedule-actions button {
+  padding: 6px 11px;
+  font-size: 12px;
+}
+
+.schedule-details {
+  margin: 10px 0;
+}
+
+.schedule-details p {
+  margin: 5px 0;
+}
+
+.schedule-time {
+  font-size: 1.15em;
+  font-weight: 700;
+  color: var(--info);
+  margin-bottom: 8px;
+}
+
+.class-schedules-title {
+  color: var(--primary);
+  margin-bottom: 10px;
+  font-size: 1.05em;
+  font-weight: 700;
+}
+
+.class-schedule-item {
+  background: var(--surface);
+  padding: 10px 12px;
+  margin: 6px 0;
+  border-radius: var(--radius-sm);
+  border-right: 3px solid var(--info);
+}
+
+.attendance-summary {
+  background: var(--primary-tint);
+  padding: 15px;
+  border-radius: var(--radius-md);
+  margin: 15px 0;
+  text-align: center;
+  color: var(--primary-dark);
+  font-weight: 600;
+}
+
+.present-students, .absent-students {
+  margin: 14px 0;
+  padding: 12px;
+  border-radius: var(--radius-md);
+}
+
+.present-students {
+  border-right: 4px solid var(--primary);
+  background: var(--success-tint);
+}
+
+.absent-students {
+  border-right: 4px solid var(--danger);
+  background: var(--danger-tint);
+}
+
+.student-item {
+  padding: 9px 10px;
+  margin: 6px 0;
+  background: #ffffff;
+  border-radius: var(--radius-sm);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.payment-status-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.payment-status-badge {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 0.85em;
+}
+
+.payment-status-badge.paid {
+  background: var(--success);
+}
+
+.payment-status-badge.unpaid {
+  background: var(--danger);
+}
+
+.payment-status-badge.partial {
+  background: var(--warning);
+  color: #2A1A0A;
+}
+
+.payment-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.payment-actions button {
+  padding: 9px 13px;
+  font-size: 13px;
+}
+
+.payment-summary {
+  display: flex;
+  justify-content: space-around;
+  background: var(--paper);
+  padding: 15px;
+  border-radius: var(--radius-md);
+  margin: 15px 0;
+  text-align: center;
+  border: 1px solid var(--surface-3);
+}
+
+.payment-amount {
+  font-weight: 700;
+  font-size: 1.15em;
+  color: var(--primary);
+}
+
+.class-section {
+  margin-bottom: 26px;
+}
+
+.class-section h4 {
+  margin-top: 18px;
+  margin-bottom: 13px;
+  padding: 10px 12px;
+  background: var(--primary-tint);
+  border-radius: var(--radius-sm);
+  border-right: 4px solid var(--primary);
+  color: var(--primary-dark);
+}
+
+/* ---------- تقويم اختيار التاريخ المخصص ---------- */
+.custom-date-picker {
+  position: relative;
+  flex: 1;
+}
+
+.date-picker-trigger {
+  width: 100%;
+  padding: 13px 15px;
+  border: 1.5px solid var(--surface-3);
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-family: inherit;
+  background: #ffffff;
+  color: var(--ink);
+  text-align: right;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.date-picker-trigger:hover,
+.date-picker-trigger:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-tint);
+}
+
+.calendar-popup {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 280px;
+  max-width: 90vw;
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--surface-3);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  z-index: 200;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: #ffffff;
+}
+
+.calendar-title {
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.calendar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.calendar-nav-btn {
+  background: transparent;
+  color: var(--primary);
+  border: none;
+  padding: 2px 6px;
+  font-size: 11px;
+  line-height: 1;
+  box-shadow: none;
+}
+
+.calendar-nav-btn:hover {
+  background: var(--primary-tint);
+  transform: none;
+  box-shadow: none;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: var(--primary);
+}
+
+.calendar-weekday {
+  text-align: center;
+  color: #ffffff;
+  font-weight: 700;
+  padding: 8px 0;
+  font-size: 13px;
+}
+
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 8px;
+  gap: 2px;
+}
+
+.calendar-day {
+  text-align: center;
+  padding: 8px 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--ink);
+  transition: background 0.15s ease;
+}
+
+.calendar-day:hover {
+  background: var(--primary-tint);
+}
+
+.calendar-day.other-month {
+  color: #C3CCC5;
+  cursor: default;
+}
+
+.calendar-day.other-month:hover {
+  background: transparent;
+}
+
+.calendar-day.today {
+  border: 2px solid var(--primary);
+}
+
+.calendar-day.selected {
+  background: var(--primary);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* إمكانية الوصول: احترام تفضيل تقليل الحركة */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px 12px 40px;
+  }
+
+  .screen {
+    padding: 20px 16px;
+    margin: 12px 0;
+  }
+
+  h1 {
+    font-size: 1.6em;
+  }
+
+  button, input, select, textarea {
+    padding: 13px;
+    font-size: 15px;
+  }
+
+  .input-group {
+    flex-direction: column;
+  }
+
+  .scanner-controls {
+    flex-direction: column;
+  }
+
+  .search-container {
+    flex-direction: column;
+  }
+
+  .student-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .student-actions {
+    justify-content: center;
+  }
+
+  .schedule-actions {
+    justify-content: center;
+  }
+
+  .payment-status-info {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .payment-actions {
+    justify-content: center;
+  }
+
+  .payment-summary {
+    flex-direction: column;
+    gap: 10px;
+  }
+}

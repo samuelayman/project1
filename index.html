@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1F5C4E">
+  <meta name="description" content="نظام إدارة حضور الطلاب والمدفوعات والمواعيد">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="الحضور">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%231F5C4E' width='192' height='192'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='80' font-weight='bold' fill='white' font-family='Arial'>ح</text></svg>">
+  <link rel="manifest" href="manifest.json">
+  <title>نظام حضور الطلاب</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- مكتبة QR Code -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- مكتبة jsQR لمسح QR -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- زر تبديل الوضع الليلي -->
+    <div class="theme-toggle">
+      <button id="themeToggle" class="theme-toggle-btn" title="تبديل الوضع الليلي/النهاري">
+        <span class="theme-icon">🌙</span>
+      </button>
+    </div>
+
+    <!-- الشاشة الرئيسية -->
+    <div id="mainScreen" class="screen active">
+      <h1>نظام حضور الطلاب</h1>
+      <p class="app-tagline">تسجيل الحضور والمدفوعات والمواعيد في مكان واحد</p>
+      <div class="menu-buttons">
+        <button onclick="showScreen('studentLoginScreen')">تسجيل دخول طالب</button>
+        <button onclick="showScreen('teacherLoginScreen')">تسجيل دخول معلم</button>
+        <button onclick="showScreen('createAccountScreen')">إنشاء حساب جديد</button>
+      </div>
+    </div>
+    <!-- شاشة تسجيل دخول الطالب -->
+    <div id="studentLoginScreen" class="screen">
+      <h2>تسجيل دخول الطالب</h2>
+      <form id="studentLoginForm">
+        <input type="text" id="studentLoginId" placeholder="رقم الطالب" required>
+        <input type="password" id="studentPassword" placeholder="كلمة المرور" required>
+        <button type="submit">تسجيل الدخول</button>
+        <button type="button" onclick="showScreen('mainScreen')" class="secondary-btn">رجوع</button>
+      </form>
+      <div id="studentLoginMessage" class="message"></div>
+    </div>
+    <!-- شاشة تسجيل دخول المعلم -->
+    <div id="teacherLoginScreen" class="screen">
+      <h2>تسجيل دخول المعلم</h2>
+      <form id="teacherLoginForm">
+        <input type="text" id="teacherId" placeholder="رقم المعلم" required>
+        <input type="password" id="teacherPassword" placeholder="كلمة المرور" required>
+        <button type="submit">تسجيل الدخول</button>
+        <button type="button" onclick="showScreen('mainScreen')" class="secondary-btn">رجوع</button>
+      </form>
+      <div id="teacherLoginMessage" class="message"></div>
+    </div>
+    <!-- شاشة إنشاء حساب -->
+    <div id="createAccountScreen" class="screen">
+      <h2>إنشاء حساب طالب جديد</h2>
+      <form id="createAccountForm">
+        <div class="input-group">
+          <input type="text" id="newStudentId" placeholder="رقم الطالب" required readonly>
+          <button type="button" onclick="generateRandomStudentId()" class="generate-btn">إنشاء رقم عشوائي</button>
+        </div>
+        <input type="text" id="newStudentName" placeholder="الاسم الكامل" required>
+        <input type="password" id="newStudentPassword" placeholder="كلمة المرور" required>
+        <input type="tel" id="newStudentPhone" placeholder="رقم هاتف الطالب" required>
+        <input type="tel" id="fatherPhone" placeholder="رقم هاتف الأب" required>
+        <input type="tel" id="motherPhone" placeholder="رقم هاتف الأم" required>
+        <select id="studentClass" required onchange="showClassSchedules()">
+          <option value="">اختر الفصل الدراسي</option>
+          <option value="الأول الاعدادي">الأول الاعدادي</option>
+          <option value="الثاني الاعدادي">الثاني الاعدادي</option>
+          <option value="الثالث الاعدادي">الثالث الاعدادي</option>
+          <option value="الأول الثانوي">الأول الثانوي</option>
+          <option value="الثاني الثانوي">الثاني الثانوي</option>
+          <option value="الثالث الثانوي">الثالث الثانوي</option>
+        </select>
+        <div id="classSchedulesInfo"></div>
+        <select id="studentGroup" required onchange="showGroupSchedule()">
+          <option value="">اختر موعد المجموعة (إجباري)</option>
+        </select>
+        <input type="number" id="lessonFee" placeholder="رسوم الدرس (بالجنيه)" required min="0">
+        <button type="submit">إنشاء الحساب</button>
+        <button type="button" onclick="showScreen('mainScreen')" class="secondary-btn">رجوع</button>
+      </form>
+      <div id="createAccountMessage" class="message"></div>
+    </div>
+    <!-- لوحة تحكم الطالب -->
+    <div id="studentDashboard" class="screen">
+      <h2>مرحباً بك يا طالب</h2>
+      <div id="studentInfo"></div>
+      <div class="dashboard-buttons">
+        <button onclick="generateQRCode()">إنشاء رمز QR</button>
+        <button onclick="showScheduleScreen()">عرض المواعيد</button>
+        <button onclick="logout()">تسجيل الخروج</button>
+      </div>
+      <div id="qrCodeContainer"></div>
+    </div>
+    <!-- شاشة المواعيد للطالب -->
+    <div id="studentSchedule" class="screen">
+      <h2>المواعيد المتاحة</h2>
+      <div id="availableSchedules"></div>
+      <div class="dashboard-buttons">
+        <button onclick="showScreen('studentDashboard')" class="secondary-btn">رجوع</button>
+      </div>
+    </div>
+    <!-- لوحة تحكم المعلم -->
+    <div id="teacherDashboard" class="screen">
+      <h2>مرحباً بك يا معلم</h2>
+      <div class="dashboard-buttons">
+        <button onclick="showAttendanceScanner()">مسح رمز QR للطالب</button>
+        <button onclick="showManualAttendance()">تسجيل حضور يدوي</button>
+        <button onclick="showClassAttendance()">عرض حضور الصف</button>
+        <button onclick="manageStudents()">إدارة الطلاب</button>
+        <button onclick="managePaymentStatus()">إدارة حالة الدفع</button>
+        <button onclick="manageSchedules()">إدارة المواعيد</button>
+        <button onclick="viewAllAttendance()">عرض سجل الحضور</button>
+        <button onclick="logout()">تسجيل الخروج</button>
+      </div>
+      <div id="teacherContent"></div>
+    </div>
+    <!-- اختيار الصف لعرض الحضور -->
+    <div id="selectClassScreen" class="screen">
+      <h2>اختر الصف لعرض الحضور</h2>
+      <div class="search-container">
+        <input type="text" id="attendanceSearchId" placeholder="ابحث برقم الطالب..." onkeyup="searchAttendanceById()">
+      </div>
+      <div class="class-selection">
+        <select id="attendanceClass" required onchange="updateAttendanceGroupOptions()">
+          <option value="">اختر الفصل الدراسي</option>
+          <option value="الأول الاعدادي">الأول الاعدادي</option>
+          <option value="الثاني الاعدادي">الثاني الاعدادي</option>
+          <option value="الثالث الاعدادي">الثالث الاعدادي</option>
+          <option value="الأول الثانوي">الأول الثانوي</option>
+          <option value="الثاني الثانوي">الثاني الثانوي</option>
+          <option value="الثالث الثانوي">الثالث الثانوي</option>
+        </select>
+        <select id="attendanceGroup" required>
+          <option value="">اختر المجموعة (إجباري)</option>
+        </select>
+        <div class="custom-date-picker" id="attendanceDatePicker">
+          <button type="button" class="date-picker-trigger" id="attendanceDateTrigger" onclick="toggleAttendanceCalendar()"></button>
+          <input type="hidden" id="attendanceDate" value="">
+          <div class="calendar-popup" id="attendanceCalendarPopup"></div>
+        </div>
+        <button onclick="viewClassAttendance()">عرض الحضور</button>
+        <button onclick="showScreen('teacherDashboard')" class="secondary-btn">رجوع</button>
+      </div>
+      <div id="classAttendanceContent"></div>
+    </div>
+    <!-- إدارة حالة الدفع -->
+    <div id="managePaymentStatusScreen" class="screen">
+      <h2>إدارة حالة الدفع</h2>
+      <p class="current-month-label" id="currentPaymentMonthLabel"></p>
+      <div class="dashboard-buttons">
+        <button onclick="viewStudentsPaymentStatus()">عرض حالة دفع الطلاب</button>
+        <button onclick="updatePaymentStatus()">تحديث حالة الدفع</button>
+      </div>
+      <div class="schedule-form">
+        <h3>تغيير الشهر الحالي</h3>
+        <div class="search-container">
+          <select id="setPaymentMonthSelect"></select>
+        </div>
+        <button onclick="setCurrentPaymentMonthManually()" class="month-btn">تعيين كشهر حالي</button>
+      </div>
+      <div class="dashboard-buttons">
+        <button onclick="showScreen('teacherDashboard')" class="secondary-btn">رجوع</button>
+      </div>
+      <div id="paymentStatusContent"></div>
+    </div>
+    <!-- عرض حالة دفع الطلاب -->
+    <div id="viewPaymentStatusScreen" class="screen">
+      <h2>حالة دفع الطلاب</h2>
+      <p class="current-month-label" id="currentPaymentMonthLabelView"></p>
+      <div class="search-container">
+        <select id="viewPaymentMonthSelect" onchange="onPaymentHistoryMonthChange()"></select>
+      </div>
+      <div class="search-container">
+        <input type="text" id="searchPaymentStudent" placeholder="ابحث عن طالب..." onkeyup="searchPaymentStudents()">
+        <select id="filterPaymentClass" onchange="filterPaymentStudents()">
+          <option value="">جميع الصفوف</option>
+          <option value="الأول الاعدادي">الأول الاعدادي</option>
+          <option value="الثاني الاعدادي">الثاني الاعدادي</option>
+          <option value="الثالث الاعدادي">الثالث الاعدادي</option>
+          <option value="الأول الثانوي">الأول الثانوي</option>
+          <option value="الثاني الثانوي">الثاني الثانوي</option>
+          <option value="الثالث الثانوي">الثالث الثانوي</option>
+        </select>
+      </div>
+      <div id="studentsPaymentStatus"></div>
+      <div class="dashboard-buttons">
+        <button onclick="showScreen('managePaymentStatusScreen')" class="secondary-btn">رجوع</button>
+      </div>
+    </div>
+    <!-- تحديث حالة الدفع -->
+    <div id="updatePaymentStatusScreen" class="screen">
+      <h2>تحديث حالة الدفع</h2>
+      <p class="current-month-label" id="currentPaymentMonthLabelUpdate"></p>
+      <div class="search-container">
+        <input type="text" id="searchUpdatePaymentStudent" placeholder="ابحث عن طالب..." onkeyup="searchUpdatePaymentStudents()">
+        <select id="filterUpdatePaymentClass" onchange="filterUpdatePaymentStudents()">
+          <option value="">جميع الصفوف</option>
+          <option value="الأول الاعدادي">الأول الاعدادي</option>
+          <option value="الثاني الاعدادي">الثاني الاعدادي</option>
+          <option value="الثالث الاعدادي">الثالث الاعدادي</option>
+          <option value="الأول الثانوي">الأول الثانوي</option>
+          <option value="الثاني الثانوي">الثاني الثانوي</option>
+          <option value="الثالث الثانوي">الثالث الثانوي</option>
+        </select>
+      </div>
+      <div id="studentsUpdatePaymentStatus"></div>
+      <div class="dashboard-buttons">
+        <button onclick="showScreen('managePaymentStatusScreen')" class="secondary-btn">رجوع</button>
+      </div>
+    </div>
+    <!-- إدارة المواعيد -->
+    <div id="scheduleManagement" class="screen">
+      <h2>إدارة المواعيد</h2>
+      <div class="schedule-form">
+        <h3>إضافة موعد جديد</h3>
+        <form id="scheduleForm">
+          <input type="time" id="scheduleTime" required>
+          <select id="scheduleClass" required onchange="updateGroupOptions()">
+            <option value="">اختر الفصل</option>
+            <option value="الأول الاعدادي">الأول الاعدادي</option>
+            <option value="الثاني الاعدادي">الثاني الاعدادي</option>
+            <option value="الثالث الاعدادي">الثالث الاعدادي</option>
+            <option value="الأول الثانوي">الأول الثانوي</option>
+            <option value="الثاني الثانوي">الثاني الثانوي</option>
+            <option value="الثالث الثانوي">الثالث الثانوي</option>
+          </select>
+          <input type="text" id="scheduleGroup" placeholder="اسم المجموعة" required>
+          <button type="submit">إضافة الموعد</button>
+        </form>
+        <div id="scheduleMessage" class="message"></div>
+      </div>
+      <div id="schedulesList"></div>
+      <div class="dashboard-buttons">
+        <button onclick="showScreen('teacherDashboard')" class="secondary-btn">رجوع</button>
+      </div>
+    </div>
+    <!-- إدارة الطلاب -->
+    <div id="manageStudents" class="screen">
+      <h2>إدارة الطلاب</h2>
+      <div class="search-container">
+        <input type="text" id="searchStudent" placeholder="ابحث عن طالب..." onkeyup="searchStudents()">
+        <button onclick="showAddStudentForm()">إضافة طالب جديد</button>
+      </div>
+      <div class="class-selection">
+        <select id="studentsFilterClass" onchange="updateStudentsFilterGroupOptions()">
+          <option value="">اختر الفصل الدراسي</option>
+          <option value="الأول الاعدادي">الأول الاعدادي</option>
+          <option value="الثاني الاعدادي">الثاني الاعدادي</option>
+          <option value="الثالث الاعدادي">الثالث الاعدادي</option>
+          <option value="الأول الثانوي">الأول الثانوي</option>
+          <option value="الثاني الثانوي">الثاني الثانوي</option>
+          <option value="الثالث الثانوي">الثالث الثانوي</option>
+        </select>
+        <select id="studentsFilterGroup">
+          <option value="">اختر المجموعة</option>
+        </select>
+        <button onclick="filterStudentsListByClassAndGroup()">عرض</button>
+        <button onclick="loadStudentsListByClassAndGroup()">عرض الكل</button>
+      </div>
+      <div id="studentsList"></div>
+      <div class="dashboard-buttons">
+        <button onclick="showScreen('teacherDashboard')" class="secondary-btn">رجوع</button>
+      </div>
+    </div>
+    <!-- نموذج تعديل الطالب -->
+    <div id="editStudentForm" class="screen">
+      <h2>تعديل بيانات الطالب</h2>
+      <form id="studentEditForm">
+        <input type="hidden" id="editStudentId">
+        <input type="text" id="editStudentName" placeholder="الاسم الكامل" required>
+        <input type="password" id="editStudentPassword" placeholder="كلمة المرور (اترك فارغاً للحفاظ على الحالية)">
+        <input type="tel" id="editStudentPhone" placeholder="رقم هاتف الطالب" required>
+        <input type="tel" id="editFatherPhone" placeholder="رقم هاتف الأب" required>
+        <input type="tel" id="editMotherPhone" placeholder="رقم هاتف الأم" required>
+        <select id="editStudentClass" required>
+          <option value="">اختر الفصل الدراسي</option>
+          <option value="الأول الاعدادي">الأول الاعدادي</option>
+          <option value="الثاني الاعدادي">الثاني الاعدادي</option>
+          <option value="الثالث الاعدادي">الثالث الاعدادي</option>
+          <option value="الأول الثانوي">الأول الثانوي</option>
+          <option value="الثاني الثانوي">الثاني الثانوي</option>
+          <option value="الثالث الثانوي">الثالث الثانوي</option>
+        </select>
+        <select id="editStudentGroup" required>
+          <option value="">اختر موعد المجموعة (إجباري)</option>
+        </select>
+        <input type="number" id="editLessonFee" placeholder="رسوم الدرس (بالجنيه)" required min="0">
+        <button type="submit">حفظ التغييرات</button>
+        <button type="button" onclick="deleteStudent()">حذف الطالب</button>
+        <button type="button" onclick="showScreen('manageStudents')">إلغاء</button>
+      </form>
+      <div id="editStudentMessage" class="message"></div>
+    </div>
+    <!-- نموذج إضافة طالب جديد من المعلم -->
+    <div id="addStudentForm" class="screen">
+      <h2>إضافة طالب جديد</h2>
+      <form id="teacherAddStudentForm">
+        <div class="input-group">
+          <input type="text" id="addStudentId" placeholder="رقم الطالب" required readonly>
+          <button type="button" onclick="generateRandomStudentIdForAdd()" class="generate-btn">إنشاء رقم عشوائي</button>
+        </div>
+        <input type="text" id="addStudentName" placeholder="الاسم الكامل" required>
+        <input type="password" id="addStudentPassword" placeholder="كلمة المرور" required>
+        <input type="tel" id="addStudentPhone" placeholder="رقم هاتف الطالب" required>
+        <input type="tel" id="addFatherPhone" placeholder="رقم هاتف الأب" required>
+        <input type="tel" id="addMotherPhone" placeholder="رقم هاتف الأم" required>
+        <select id="addStudentClass" required>
+          <option value="">اختر الفصل الدراسي</option>
+          <option value="الأول الاعدادي">الأول الاعدادي</option>
+          <option value="الثاني الاعدادي">الثاني الاعدادي</option>
+          <option value="الثالث الاعدادي">الثالث الاعدادي</option>
+          <option value="الأول الثانوي">الأول الثانوي</option>
+          <option value="الثاني الثانوي">الثاني الثانوي</option>
+          <option value="الثالث الثانوي">الثالث الثانوي</option>
+        </select>
+        <select id="addStudentGroup" required>
+          <option value="">اختر موعد المجموعة (إجباري)</option>
+        </select>
+        <input type="number" id="addLessonFee" placeholder="رسوم الدرس (بالجنيه)" required min="0">
+        <button type="submit">إضافة الطالب</button>
+        <button type="button" onclick="showScreen('manageStudents')">إلغاء</button>
+      </form>
+      <div id="addStudentMessage" class="message"></div>
+    </div>
+    <!-- ماسح QR -->
+    <div id="qrScanner" class="screen">
+      <h2>مسح رمز QR للطالب</h2>
+      <div class="scanner-container">
+        <video id="video" width="100%" height="300" style="border: 2px solid var(--surface-3); border-radius: 16px;"></video>
+        <canvas id="canvas" style="display: none;"></canvas>
+        <div class="scanner-controls">
+          <button id="startCamera" onclick="startCamera()">تشغيل الكاميرا</button>
+          <button id="stopCamera" onclick="stopCamera()" style="display: none;">إيقاف الكاميرا</button>
+          <button onclick="showScreen('teacherDashboard')" class="secondary-btn">رجوع</button>
+        </div>
+        <div id="scannerMessage" class="message"></div>
+      </div>
+    </div>
+    <!-- تسجيل حضور يدوي -->
+    <div id="manualAttendance" class="screen">
+      <h2>تسجيل حضور يدوي</h2>
+      <div class="scanner-content">
+        <input type="text" id="manualStudentId" placeholder="أدخل رقم الطالب" onfocus="clearInput(this)">
+        <button onclick="manualAttendance()">تسجيل الحضور</button>
+        <button onclick="showScreen('teacherDashboard')" class="secondary-btn">رجوع</button>
+      </div>
+      <div id="manualAttendanceMessage" class="message"></div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+  <!-- تسجيل Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(reg => console.log('✅ Service Worker مسجّل بنجاح'))
+        .catch(err => console.log('⚠️ خطأ في تسجيل Service Worker:', err));
+    }
+  </script>
+</body>
+
+</html>
