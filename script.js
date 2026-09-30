@@ -623,12 +623,12 @@ function loadAvailableSchedules() {
 }
 
 function generateQRCode() {
-  const qrData = `STUDENT:${currentStudent.id}:${currentStudent.name}`;
+  const qrData = `STUDENT:${currentStudent.id}`;
   const qrContainerDiv = document.getElementById("qrCodeContainer");
   qrContainerDiv.innerHTML = `
         <div style="text-align: center;">
             <h3>رمز QR الخاص بك</h3>
-            <div id="qrcode" style="display: inline-block;"></div>
+            <div id="qrcode" style="display: inline-block; padding: 16px; background: #ffffff;"></div>
             <p style="margin-top: 10px; font-size: 14px; color: #666;">
                 قم بإظهار هذا الرمز للمعلم لتسجيل الحضور
             </p>
@@ -636,11 +636,11 @@ function generateQRCode() {
     `;
   qrCode = new QRCode(document.getElementById("qrcode"), {
     text: qrData,
-    width: 200,
-    height: 200,
+    width: 280,
+    height: 280,
     colorDark: "#000000",
     colorLight: "#ffffff",
-    correctLevel: QRCode.CorrectLevel.H
+    correctLevel: QRCode.CorrectLevel.M
   });
 }
 
@@ -1305,7 +1305,7 @@ function startCamera() {
   }
   navigator.mediaDevices
     .getUserMedia({
-      video: { facingMode: "environment" }
+      video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
     })
     .then(function (stream) {
       video.srcObject = stream;
@@ -1341,32 +1341,35 @@ function stopCamera() {
 
 function scanQRCode() {
   if (!scanning) return;
-  if (video.readyState === video.HAVE_ENOUGH_DATA) {
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+  if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth) {
+    // تصغير الصورة لتسريع القراءة (أقصى عرض 640)
+    const scale = Math.min(1, 640 / video.videoWidth);
+    const w = Math.floor(video.videoWidth * scale);
+    const h = Math.floor(video.videoHeight * scale);
+    if (canvas.width !== w) canvas.width = w;
+    if (canvas.height !== h) canvas.height = h;
+    context.drawImage(video, 0, 0, w, h);
+    const imageData = context.getImageData(0, 0, w, h);
     if (window.jsQR) {
-      const code = jsQR(imageData.data, imageData.width, imageData.height);
-      if (code) {
-        processQRCode(code.data);
-        // كمل تصوير تلقائيًا سواء الكود كان صح أو غلط، من غير قفل الكاميرا أو الرجوع لأي صفحة
-        setTimeout(scanQRCode, 1500);
+      const code = jsQR(imageData.data, w, h, { inversionAttempts: "dontInvert" });
+      if (code && code.data) {
+        processQRCode(code.data.trim());
+        setTimeout(scanQRCode, 800);
         return;
       }
     }
   }
-  setTimeout(scanQRCode, 100);
+  requestAnimationFrame(scanQRCode);
 }
 
 function processQRCode(qrData) {
   const messageDiv = document.getElementById("scannerMessage");
   if (qrData.startsWith("STUDENT:")) {
     const parts = qrData.split(":");
-    if (parts.length >= 3) {
-      const studentId = parts[1];
-      const studentName = parts[2];
+    if (parts.length >= 2) {
+      const studentId = parts[1].trim();
       if (users[studentId] && users[studentId].type === "student") {
+        const studentName = users[studentId].name;
         const now = Date.now();
         // منع إعادة المعالجة الفورية لو نفس الكود لسه قدام الكاميرا في نفس اللحظة
         if (studentId === lastScannedId && now - lastScannedTime < 5000) {
