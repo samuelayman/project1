@@ -32,35 +32,39 @@ if (typeof firebase !== 'undefined') {
 
 // تحميل البيانات من Firebase
 function loadDataFromFirebase() {
-  if (!firebaseDB) return;
+  if (!firebaseDB) return Promise.resolve();
 
-  firebaseDB.ref('students').once('value').then((snapshot) => {
+  const p1 = firebaseDB.ref('students').once('value').then((snapshot) => {
     if (snapshot.exists()) {
       users = snapshot.val();
       console.log("تم تحميل الطلاب من Firebase");
     }
   });
 
-  firebaseDB.ref('attendance').once('value').then((snapshot) => {
+  const p2 = firebaseDB.ref('attendance').once('value').then((snapshot) => {
     if (snapshot.exists()) {
       attendance = snapshot.val();
       console.log("تم تحميل سجل الحضور من Firebase");
     }
   });
 
-  firebaseDB.ref('schedules').once('value').then((snapshot) => {
+  const p3 = firebaseDB.ref('schedules').once('value').then((snapshot) => {
     if (snapshot.exists()) {
       schedules = snapshot.val();
       console.log("تم تحميل المواعيد من Firebase");
     }
   });
 
-  firebaseDB.ref('paymentStatus').once('value').then((snapshot) => {
+  const p4 = firebaseDB.ref('paymentStatus').once('value').then((snapshot) => {
     if (snapshot.exists()) {
       paymentStatus = snapshot.val();
       currentPaymentMonth = paymentStatus.currentMonth || getMonthKey(new Date());
       console.log("تم تحميل حالة الدفع من Firebase");
     }
+  });
+
+  return Promise.all([p1, p2, p3, p4]).catch((e) => {
+    console.log("⚠️ تعذر تحميل بعض البيانات من Firebase:", e && e.message);
   });
 }
 
@@ -81,8 +85,9 @@ function saveData(type, data) {
 }
 
 // حمّل البيانات عند البداية
+let firebaseReady = null;
 if (useFirebase) {
-  setTimeout(loadDataFromFirebase, 1000);
+  firebaseReady = loadDataFromFirebase();
 }
 
 // ========== نظام تبديل الوضع الليلي ==========
@@ -2226,6 +2231,65 @@ window.addEventListener("beforeunload", function () {
 });
 
 // تهيئة النظام عند تحميل الصفحة
+const PUBLIC_SCREENS = ["mainScreen", "studentLoginScreen", "teacherLoginScreen", "createAccountScreen"];
+
+// شاشات الطالب: كل شاشة ودالة فتحها (بتجهّز محتواها)
+const STUDENT_SCREEN_OPENERS = {
+  studentDashboard: () => showStudentDashboard(),
+  studentSchedule: () => showScheduleScreen()
+};
+
+// شاشات المعلم: الشاشات اللي محتاجة بيانات مؤقتة (زي تعديل طالب) بترجع لقائمتها
+const TEACHER_SCREEN_OPENERS = {
+  teacherDashboard: () => showTeacherDashboard(),
+  selectClassScreen: () => showClassAttendance(),
+  managePaymentStatusScreen: () => managePaymentStatus(),
+  viewPaymentStatusScreen: () => viewStudentsPaymentStatus(),
+  updatePaymentStatusScreen: () => updatePaymentStatus(),
+  scheduleManagement: () => manageSchedules(),
+  manageStudents: () => manageStudents(),
+  addStudentForm: () => showAddStudentForm(),
+  editStudentForm: () => manageStudents(),
+  qrScanner: () => showAttendanceScanner(),
+  manualAttendance: () => showManualAttendance()
+};
+
+function getWantedScreen() {
+  const hashScreen = window.location.hash ? window.location.hash.substring(1) : "";
+  if (hashScreen && document.getElementById(hashScreen)) return hashScreen;
+  const saved = localStorage.getItem("currentScreen");
+  if (saved && document.getElementById(saved)) return saved;
+  return "mainScreen";
+}
+
+function restoreSession() {
+  const wanted = getWantedScreen();
+  const savedStudentId = localStorage.getItem("currentStudentId");
+  const savedTeacherId = localStorage.getItem("currentTeacherId");
+
+  // معلم مسجل دخوله
+  if (savedTeacherId === TEACHER_ID) {
+    currentTeacher = { id: savedTeacherId };
+    const open = TEACHER_SCREEN_OPENERS[wanted] || TEACHER_SCREEN_OPENERS.teacherDashboard;
+    open();
+    return TEACHER_SCREEN_OPENERS[wanted] ? wanted : "teacherDashboard";
+  }
+
+  // طالب مسجل دخوله
+  if (savedStudentId && users[savedStudentId]) {
+    currentStudent = users[savedStudentId];
+    currentStudent.id = savedStudentId;
+    const open = STUDENT_SCREEN_OPENERS[wanted] || STUDENT_SCREEN_OPENERS.studentDashboard;
+    open();
+    return STUDENT_SCREEN_OPENERS[wanted] ? wanted : "studentDashboard";
+  }
+
+  // مش مسجل دخول: الشاشات العامة بس
+  const target = PUBLIC_SCREENS.includes(wanted) ? wanted : "mainScreen";
+  showScreen(target);
+  return target;
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   console.log("نظام حضور الطلاب جاهز!");
   // تهيئة قائمة المجموعات في نماذج الإضافة والتعديل
@@ -2236,38 +2300,28 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("studentGroup").innerHTML =
     '<option value="">اختر موعد المجموعة</option>';
 
-  // استعد الشاشة المحفوظة من URL hash أو localStorage
-  let screenToShow = "mainScreen";
-
-  // أولاً: تحقق من URL hash
-  if (window.location.hash) {
-    const hashScreen = window.location.hash.substring(1);
-    if (document.getElementById(hashScreen)) {
-      screenToShow = hashScreen;
-    }
-  }
-  // ثانياً: تحقق من localStorage إذا لم يكن هناك hash
-  else {
-    const savedScreen = localStorage.getItem("currentScreen");
-    if (savedScreen && document.getElementById(savedScreen)) {
-      screenToShow = savedScreen;
-    }
-  }
-
-  // استعد بيانات الطالب أو المعلم المسجل
   const savedStudentId = localStorage.getItem("currentStudentId");
-  const savedTeacherId = localStorage.getItem("currentTeacherId");
+  const needsWait =
+    savedStudentId && !users[savedStudentId] && firebaseReady;
 
-  if (savedStudentId && users[savedStudentId]) {
-    currentStudent = users[savedStudentId];
-    currentStudent.id = savedStudentId;
-    screenToShow = "studentDashboard";
-    showStudentDashboard();
-  } else if (savedTeacherId === TEACHER_ID) {
-    currentTeacher = { id: savedTeacherId };
-    screenToShow = "teacherDashboard";
-    showScreen(screenToShow);
+  const finish = () => {
+    const restored = restoreSession();
+    // بعد وصول بيانات Firebase الأحدث، حدّث نفس الشاشة (لو المستخدم لسه فيها)
+    if (firebaseReady && !needsWait && restored !== "qrScanner") {
+      firebaseReady.then(() => {
+        const current = document.querySelector(".screen.active");
+        if (current && current.id === restored) restoreSession();
+      });
+    }
+  };
+
+  if (needsWait) {
+    // استنى بيانات الطلاب من Firebase (بحد أقصى 5 ثواني) بدل ما يرجّعك للرئيسية
+    Promise.race([
+      firebaseReady,
+      new Promise((resolve) => setTimeout(resolve, 5000))
+    ]).then(finish);
   } else {
-    showScreen(screenToShow);
+    finish();
   }
 });

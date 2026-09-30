@@ -1,10 +1,10 @@
-const CACHE_NAME = 'student-attendance-v2';
+const CACHE_NAME = 'student-attendance-v3';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/script.js',
-  '/manifest.json',
+  './',
+  './index.html',
+  './style.css',
+  './script.js',
+  './manifest.json',
   'https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
   'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js',
