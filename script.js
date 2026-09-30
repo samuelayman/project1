@@ -1305,9 +1305,11 @@ function startCamera() {
   }
   navigator.mediaDevices
     .getUserMedia({
-      video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
+      video: { facingMode: "environment" }
     })
     .then(function (stream) {
+      video.setAttribute("playsinline", "true");
+      video.muted = true;
       video.srcObject = stream;
       video.play();
       scanning = true;
@@ -1339,27 +1341,54 @@ function stopCamera() {
   }
 }
 
-function scanQRCode() {
+let barcodeDetector = null;
+try {
+  if ("BarcodeDetector" in window) {
+    barcodeDetector = new BarcodeDetector({ formats: ["qr_code"] });
+  }
+} catch (e) {
+  barcodeDetector = null;
+}
+
+async function scanQRCode() {
   if (!scanning) return;
-  if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth) {
-    // تصغير الصورة لتسريع القراءة (أقصى عرض 640)
-    const scale = Math.min(1, 640 / video.videoWidth);
-    const w = Math.floor(video.videoWidth * scale);
-    const h = Math.floor(video.videoHeight * scale);
-    if (canvas.width !== w) canvas.width = w;
-    if (canvas.height !== h) canvas.height = h;
-    context.drawImage(video, 0, 0, w, h);
-    const imageData = context.getImageData(0, 0, w, h);
-    if (window.jsQR) {
-      const code = jsQR(imageData.data, w, h, { inversionAttempts: "dontInvert" });
-      if (code && code.data) {
-        processQRCode(code.data.trim());
-        setTimeout(scanQRCode, 800);
+  try {
+    if (video.readyState >= 2 && video.videoWidth) {
+      let result = null;
+
+      // 1) القارئ المدمج في المتصفح (الأسرع والأدق) لو متاح
+      if (barcodeDetector) {
+        try {
+          const found = await barcodeDetector.detect(video);
+          if (found && found.length) result = found[0].rawValue;
+        } catch (e) {
+          barcodeDetector = null; // لو فشل نكمل بـ jsQR
+        }
+      }
+
+      // 2) jsQR كبديل
+      if (!result && window.jsQR) {
+        const scale = Math.min(1, 1024 / video.videoWidth);
+        const w = Math.floor(video.videoWidth * scale);
+        const h = Math.floor(video.videoHeight * scale);
+        canvas.width = w;
+        canvas.height = h;
+        context.drawImage(video, 0, 0, w, h);
+        const imageData = context.getImageData(0, 0, w, h);
+        const code = jsQR(imageData.data, w, h, { inversionAttempts: "attemptBoth" });
+        if (code && code.data) result = code.data;
+      }
+
+      if (result) {
+        processQRCode(String(result).trim());
+        setTimeout(scanQRCode, 1000);
         return;
       }
     }
+  } catch (err) {
+    console.error("خطأ في قراءة QR:", err);
   }
-  requestAnimationFrame(scanQRCode);
+  setTimeout(scanQRCode, 120);
 }
 
 function processQRCode(qrData) {
