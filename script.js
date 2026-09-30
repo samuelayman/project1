@@ -1375,7 +1375,7 @@ async function scanQRCode() {
         canvas.height = h;
         context.drawImage(video, 0, 0, w, h);
         const imageData = context.getImageData(0, 0, w, h);
-        const code = jsQR(imageData.data, w, h, { inversionAttempts: "attemptBoth" });
+        const code = jsQR(imageData.data, w, h, { inversionAttempts: "dontInvert" });
         if (code && code.data) result = code.data;
       }
 
