@@ -1,4 +1,4 @@
-const CACHE_NAME = 'student-attendance-v3';
+const CACHE_NAME = 'student-attendance-v5';
 const urlsToCache = [
   './',
   './index.html',
@@ -9,7 +9,8 @@ const urlsToCache = [
   'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
   'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js',
   'https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js',
-  'https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js'
+  'https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js',
+  'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js'
 ];
 
 // تثبيت Service Worker

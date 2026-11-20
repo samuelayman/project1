@@ -23,6 +23,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 </head>
 
 <body>
@@ -105,6 +106,7 @@
       <div class="dashboard-buttons">
         <button onclick="generateQRCode()">إنشاء رمز QR</button>
         <button onclick="showScheduleScreen()">عرض المواعيد</button>
+        <button onclick="showStudentReceipts()">إيصالات الدفع</button>
         <button onclick="logout()">تسجيل الخروج</button>
       </div>
       <div id="qrCodeContainer"></div>
@@ -117,6 +119,14 @@
         <button onclick="showScreen('studentDashboard')" class="secondary-btn">رجوع</button>
       </div>
     </div>
+    <!-- شاشة إيصالات الطالب -->
+    <div id="studentReceipts" class="screen">
+      <h2>إيصالات الدفع</h2>
+      <div id="studentReceiptsList"></div>
+      <div class="dashboard-buttons">
+        <button onclick="showScreen('studentDashboard')" class="secondary-btn">رجوع</button>
+      </div>
+    </div>
     <!-- لوحة تحكم المعلم -->
     <div id="teacherDashboard" class="screen">
       <h2>مرحباً بك يا معلم</h2>
@@ -124,6 +134,7 @@
         <button onclick="showAttendanceScanner()">مسح رمز QR للطالب</button>
         <button onclick="showManualAttendance()">تسجيل حضور يدوي</button>
         <button onclick="showClassAttendance()">عرض حضور الصف</button>
+        <button onclick="showReports()">التقارير والإحصائيات</button>
         <button onclick="manageStudents()">إدارة الطلاب</button>
         <button onclick="managePaymentStatus()">إدارة حالة الدفع</button>
         <button onclick="manageSchedules()">إدارة المواعيد</button>
@@ -131,6 +142,37 @@
         <button onclick="logout()">تسجيل الخروج</button>
       </div>
       <div id="teacherContent"></div>
+    </div>
+    <!-- شاشة التقارير والإحصائيات -->
+    <div id="reportsScreen" class="screen">
+      <h2>التقارير والإحصائيات</h2>
+      <div class="search-container">
+        <select id="reportsClass" onchange="updateReportsGroupOptions()">
+          <option value="">اختر الفصل الدراسي</option>
+          <option value="الأول الاعدادي">الأول الاعدادي</option>
+          <option value="الثاني الاعدادي">الثاني الاعدادي</option>
+          <option value="الثالث الاعدادي">الثالث الاعدادي</option>
+          <option value="الأول الثانوي">الأول الثانوي</option>
+          <option value="الثاني الثانوي">الثاني الثانوي</option>
+          <option value="الثالث الثانوي">الثالث الثانوي</option>
+        </select>
+        <select id="reportsGroup">
+          <option value="">كل المجموعات</option>
+        </select>
+      </div>
+      <div class="search-container">
+        <input type="text" id="reportsSearch" placeholder="ابحث بالاسم أو الرقم...">
+        <select id="reportsStatus">
+          <option value="">كل حالات الدفع</option>
+          <option value="paid">خالص</option>
+          <option value="unpaid">متأخر في الدفع</option>
+        </select>
+      </div>
+      <div class="dashboard-buttons">
+        <button onclick="renderReports()">عرض التقرير</button>
+        <button onclick="showScreen('teacherDashboard')" class="secondary-btn">رجوع</button>
+      </div>
+      <div id="reportsContent"></div>
     </div>
     <!-- اختيار الصف لعرض الحضور -->
     <div id="selectClassScreen" class="screen">
@@ -190,7 +232,7 @@
       </div>
       <div class="search-container">
         <input type="text" id="searchPaymentStudent" placeholder="ابحث عن طالب..." onkeyup="searchPaymentStudents()">
-        <select id="filterPaymentClass" onchange="filterPaymentStudents()">
+        <select id="filterPaymentClass" onchange="onPaymentClassFilterChange()">
           <option value="">جميع الصفوف</option>
           <option value="الأول الاعدادي">الأول الاعدادي</option>
           <option value="الثاني الاعدادي">الثاني الاعدادي</option>
@@ -198,6 +240,16 @@
           <option value="الأول الثانوي">الأول الثانوي</option>
           <option value="الثاني الثانوي">الثاني الثانوي</option>
           <option value="الثالث الثانوي">الثالث الثانوي</option>
+        </select>
+      </div>
+      <div class="search-container">
+        <select id="filterPaymentGroup" onchange="filterPaymentStudents()">
+          <option value="">كل المجموعات</option>
+        </select>
+        <select id="filterPaymentStatus" onchange="filterPaymentStudents()">
+          <option value="">كل الحالات</option>
+          <option value="paid">خالص</option>
+          <option value="unpaid">متأخر في الدفع</option>
         </select>
       </div>
       <div id="studentsPaymentStatus"></div>
@@ -363,6 +415,16 @@
         <button onclick="showScreen('teacherDashboard')" class="secondary-btn">رجوع</button>
       </div>
       <div id="manualAttendanceMessage" class="message"></div>
+    </div>
+  </div>
+  <!-- نافذة الإيصال (تُطبع أو تُحفظ PDF) -->
+  <div id="receiptModal" class="receipt-modal">
+    <div class="receipt-box">
+      <div id="receiptPrintable" class="print-receipt"></div>
+      <div class="receipt-modal-actions">
+        <button onclick="printReceipt()">🖨️ طباعة / حفظ PDF</button>
+        <button class="secondary-btn" onclick="closeReceipt()">إغلاق</button>
+      </div>
     </div>
   </div>
   <script src="script.js"></script>
