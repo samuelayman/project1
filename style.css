@@ -4,31 +4,31 @@
    ========================================================= */
 
 :root {
-  --ink: #16221D;
-  --ink-soft: #55645C;
-  --paper: #EFF3EF;
+  --ink: #0F172A;
+  --ink-soft: #64748B;
+  --paper: #F1F5F9;
   --surface: #FFFFFF;
-  --surface-2: #E6ECE7;
-  --surface-3: #D3DED6;
+  --surface-2: #E8EDF4;
+  --surface-3: #D3DBE6;
 
-  --primary: #1F5C4E;
-  --primary-dark: #143F35;
-  --primary-tint: #E1EEE9;
+  --primary: #4F46E5;
+  --primary-dark: #4338CA;
+  --primary-tint: #EEF2FF;
 
-  --accent: #C97A2B;
-  --accent-tint: #F7E8D6;
+  --accent: #F59E0B;
+  --accent-tint: #FEF3C7;
 
-  --danger: #B3492F;
-  --danger-tint: #F5DED7;
+  --danger: #EF4444;
+  --danger-tint: #FEE2E2;
 
-  --warning: #C97A2B;
-  --warning-tint: #F7E8D6;
+  --warning: #F59E0B;
+  --warning-tint: #FEF3C7;
 
-  --info: #2B6E85;
-  --info-tint: #DCEBEF;
+  --info: #0EA5E9;
+  --info-tint: #E0F2FE;
 
-  --success: #1F5C4E;
-  --success-tint: #E1EEE9;
+  --success: #10B981;
+  --success-tint: #D1FAE5;
 
   --radius-sm: 8px;
   --radius-md: 14px;
@@ -40,40 +40,40 @@
   --font: "Cairo", "Segoe UI", "Tahoma", "Noto Sans Arabic", "Noto Kufi Arabic", sans-serif;
 
   /* ألوان نصوص رسائل النجاح/الخطأ (تتبدّل في الوضع الليلي لتباين أوضح) */
-  --msg-success-text: #15503F;
-  --msg-error-text: #7A2F1C;
+  --msg-success-text: #065F46;
+  --msg-error-text: #991B1B;
 }
 
 /* الوضع الليلي (Dark Mode) */
 body.dark-mode {
-  --ink: #E8EDEB;
-  --ink-soft: #A8B5AF;
-  --paper: #0D1419;
-  --surface: #1A2127;
-  --surface-2: #252D35;
-  --surface-3: #3A4450;
+  --ink: #E2E8F0;
+  --ink-soft: #94A3B8;
+  --paper: #0B1120;
+  --surface: #1E293B;
+  --surface-2: #273449;
+  --surface-3: #3A4A63;
 
-  --primary: #2D8B7A;
-  --primary-dark: #1F5C4E;
-  --primary-tint: #1A3A31;
+  --primary: #818CF8;
+  --primary-dark: #6366F1;
+  --primary-tint: #312E81;
 
-  --accent: #E8934D;
-  --accent-tint: #3D2815;
+  --accent: #FBBF24;
+  --accent-tint: #3B2F0B;
 
-  --danger: #E8725F;
-  --danger-tint: #4A2418;
+  --danger: #F87171;
+  --danger-tint: #4C1D1D;
 
-  --warning: #E8934D;
-  --warning-tint: #3D2815;
+  --warning: #FBBF24;
+  --warning-tint: #3B2F0B;
 
-  --info: #4BA5C9;
-  --info-tint: #1E3A48;
+  --info: #38BDF8;
+  --info-tint: #0B3A52;
 
-  --success: #2D8B7A;
-  --success-tint: #1A3A31;
+  --success: #34D399;
+  --success-tint: #06362A;
 
-  --msg-success-text: #93E8D3;
-  --msg-error-text: #F4B3A3;
+  --msg-success-text: #6EE7B7;
+  --msg-error-text: #FCA5A5;
 }
 
 * {
@@ -216,11 +216,14 @@ button {
   background: var(--primary);
   color: #ffffff;
   font-weight: 600;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+  letter-spacing: 0.2px;
 }
 
 button:hover {
   background: var(--primary-dark);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.16);
 }
 
 button:active { transform: translateY(0); }
@@ -239,16 +242,16 @@ button:focus-visible {
 .secondary-btn:hover { background: var(--surface-2); color: var(--ink); }
 
 .delete-btn { background: var(--danger) !important; }
-.delete-btn:hover { background: #8f3922 !important; }
+.delete-btn:hover { background: #DC2626 !important; }
 
 .paid-btn { background: var(--success) !important; }
 .paid-btn:hover { background: var(--primary-dark) !important; }
 
 .unpaid-btn { background: var(--warning) !important; color: #2A1A0A !important; }
-.unpaid-btn:hover { background: #a8631f !important; }
+.unpaid-btn:hover { background: #D97706 !important; }
 
 .toggle-payment-btn { background: var(--info) !important; }
-.toggle-payment-btn:hover { background: #1f5261 !important; }
+.toggle-payment-btn:hover { background: #0284C7 !important; }
 
 .generate-btn {
   padding: 8px 12px;
@@ -257,24 +260,27 @@ button:focus-visible {
   white-space: nowrap;
   background: var(--accent);
 }
-.generate-btn:hover { background: #a8631f; }
+.generate-btn:hover { background: #D97706; }
 
 .month-btn { background: var(--accent); }
-.month-btn:hover { background: #a8631f; }
+.month-btn:hover { background: #D97706; }
 
 /* ---------- قوائم الأزرار: شبكة تتمدد على اللابتوب ---------- */
 .menu-buttons,
 .dashboard-buttons {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 10px;
+  max-width: 460px;
+  margin: 0 auto;
 }
 
 .class-selection {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 10px;
-  margin-bottom: 18px;
+  margin: 0 auto 18px;
+  max-width: 460px;
 }
 
 .search-container {
@@ -397,10 +403,11 @@ textarea { min-height: 80px; resize: vertical; }
 
 .scanner-container { text-align: center; }
 .scanner-controls {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 10px;
-  margin-top: 12px;
+  margin: 12px auto 0;
+  max-width: 460px;
 }
 
 #qrScanner video { max-width: 420px; margin: 0 auto; display: block; }
